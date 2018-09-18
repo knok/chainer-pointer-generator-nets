@@ -30,7 +30,7 @@ def cross_entropy(ys, ts, reduce='mean', ignore_label=None, eps=1e-10):
 
 class Seq2seq(chainer.Chain):
 
-    def __init__(self, n_vocab, n_vocab_with_unk,
+    def __init__(self, n_vocab,
                  n_encoder_layers, n_encoder_units, n_encoder_dropout,
                  n_decoder_units, n_attention_units,
                  n_maxout_units, n_maxout_pools=2, lamb=1.0):
@@ -46,7 +46,6 @@ class Seq2seq(chainer.Chain):
             )
             self.decoder = Decoder(
                 n_vocab,
-                n_vocab_with_unk,
                 n_decoder_units,
                 n_attention_units,
                 n_encoder_units * 2,  # because of bi-directional lstm
@@ -143,7 +142,7 @@ class Encoder(chainer.Chain):
 
 class Decoder(chainer.Chain):
 
-    def __init__(self, n_vocab, n_vocab_with_unk, n_units, n_attention_units,
+    def __init__(self, n_vocab, n_units, n_attention_units,
                  n_encoder_output_units, n_maxout_units, n_maxout_pools, embed_xy):
         super(Decoder, self).__init__()
         with self.init_scope():
@@ -167,7 +166,7 @@ class Decoder(chainer.Chain):
                 n_units
             )
             self.pointer = PointerModule(
-                n_vocab_with_unk,
+                n_vocab,
                 n_encoder_output_units,
                 n_units,
             )
