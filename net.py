@@ -97,7 +97,7 @@ class Seq2seq(chainer.Chain):
         """
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             hxs = self.encoder(xs)
-            ys = self.decoder.translate(xs, hxs, max_length)
+            ys = self.decoder.translate(xs, hxs, oovs, max_length)
         return ys
 
 
@@ -219,12 +219,11 @@ class Decoder(chainer.Chain):
             previous_embedding = self.embed_y(y)
         return os
 
-    def translate(self, txs, hxs, max_length):
+    def translate(self, txs, hxs, oovs, max_length):
         """Generate target sentences given hidden states of source sentences.
 
         Args:
-            txs: Source sequences' word ids represented by target-side
-                vocabulary ids.
+            txs: Source sequences' word ids
             hxs: Hidden states for source sequences.
 
         Returns:
@@ -249,7 +248,7 @@ class Decoder(chainer.Chain):
 
             o = self.w(self.maxout(concatenated))
             pointed_o = self.pointer(
-                context, h, previous_embedding, txs, attention, o
+                context, h, previous_embedding, txs, attention, o, oovs
             )
             y = F.reshape(F.argmax(pointed_o, axis=1), (batch_size, ))
 
