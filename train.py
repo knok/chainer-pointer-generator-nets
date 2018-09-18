@@ -21,8 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description='Attention-based NMT')
     parser.add_argument('SOURCE', help='source sentence list')
     parser.add_argument('TARGET', help='target sentence list')
-    parser.add_argument('SOURCE_VOCAB', help='source vocabulary file')
-    parser.add_argument('TARGET_VOCAB', help='target vocabulary file')
+    parser.add_argument('VOCAB', help='vocabulary file')
     parser.add_argument('--validation-source',
                         help='source sentence list for validation')
     parser.add_argument('--validation-target',
@@ -60,19 +59,18 @@ def main():
                         help='directory to output the result')
     args = parser.parse_args()
 
-    source_ids = load_vocabulary(args.SOURCE_VOCAB)
-    target_ids = load_vocabulary(args.TARGET_VOCAB)
+    vocab_ids = load_vocabulary(args.VOCAB)
 
-    source_ids_with_unks, target_ids_with_unks, source_ids_to_target_ids = \
+    vocab_ids_with_unks = \
         make_vocabulary_with_source_side_unks(
             [args.SOURCE, args.validation_source],
-            source_ids, target_ids
+            vocab_ids
         )
 
-    train_source = load_data(source_ids_with_unks, args.SOURCE)
-    train_target = load_data(target_ids_with_unks, args.TARGET)
+    train_source = load_data(vocab_ids_with_unks, args.SOURCE)
+    train_target = load_data(vocab_ids_with_unks, args.TARGET)
     # train source represented by target-side dictionary indices
-    train_source_t = load_data(target_ids_with_unks, args.SOURCE)
+    train_source_t = load_data(vocab_ids_with_unks, args.SOURCE)
     assert len(train_source) == len(train_target)
     train_data = [(s, st, t)
                   for s, st, t
@@ -83,24 +81,22 @@ def main():
                   <= args.max_source_sentence]
     train_source_unk = calculate_unknown_ratio(
         [s for s, _, _ in train_data],
-        len(source_ids)
+        len(vocab_ids)
     )
     train_target_unk = calculate_unknown_ratio(
         [t for _, _, t in train_data],
-        len(target_ids)
+        len(vocab_ids)
     )
 
-    print('Source vocabulary size: {}'.format(len(source_ids)))
-    print('Target vocabulary size: {}'.format(len(target_ids)))
+    print('All vocabulary size: {}'.format(len(vocab_ids)))
     print('Train data size: {}'.format(len(train_data)))
     print('Train source unknown: {0:.2f}'.format(train_source_unk))
     print('Train target unknown: {0:.2f}'.format(train_target_unk))
 
-    source_words = {i: w for w, i in source_ids_with_unks.items()}
-    target_words = {i: w for w, i in target_ids_with_unks.items()}
+    vocab_words = {i: w for w, i in vocab_ids_with_unks.items()}
 
     model = Seq2seq(
-        len(source_ids), len(target_ids), len(target_ids_with_unks),
+        len(vocab_ids), len(vocab_ids_with_unks),
         args.encoder_layer, args.encoder_unit,
         args.encoder_dropout, args.decoder_unit,
         args.attention_unit, args.maxout_unit
@@ -131,9 +127,9 @@ def main():
     )
 
     if args.validation_source and args.validation_target:
-        test_source = load_data(source_ids, args.validation_source)
-        test_target = load_data(target_ids, args.validation_target)
-        test_source_t = load_data(target_ids_with_unks, args.validation_source)
+        test_source = load_data(vocab_ids, args.validation_source)
+        test_target = load_data(vocab_ids, args.validation_target)
+        test_source_t = load_data(vocab_ids_with_unks, args.validation_source)
         assert len(test_source) == len(test_target)
         test_data = list(
             six.moves.zip(test_source, test_source_t, test_target)
@@ -142,11 +138,11 @@ def main():
                      if 0 < len(s) and 0 < len(t)]
         test_source_unk = calculate_unknown_ratio(
             [s for s, _, _ in test_data],
-            len(source_ids)
+            len(vocab_ids)
         )
         test_target_unk = calculate_unknown_ratio(
             [t for _, _, t in test_data],
-            len(target_ids)
+            len(vocab_ids)
         )
 
         print('Validation data: {}'.format(len(test_data)))
@@ -163,9 +159,9 @@ def main():
 
             source, target, result = source[0], target[0], result[0]
 
-            source_sentence = ' '.join([source_words[int(x)] for x in source])
-            target_sentence = ' '.join([target_words[int(y)] for y in target])
-            result_sentence = ' '.join([target_words[int(y)] for y in result])
+            source_sentence = ' '.join([vocab_words[int(x)] for x in source])
+            target_sentence = ' '.join([vocab_words[int(y)] for y in target])
+            result_sentence = ' '.join([vocab_words[int(y)] for y in result])
             print('# source : ' + source_sentence)
             print('# result : ' + result_sentence)
             print('# expect : ' + target_sentence)
