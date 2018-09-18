@@ -30,26 +30,29 @@ def cross_entropy(ys, ts, reduce='mean', ignore_label=None, eps=1e-10):
 
 class Seq2seq(chainer.Chain):
 
-    def __init__(self, n_source_vocab, n_target_vocab, n_target_vocab_with_unk,
+    def __init__(self, n_vocab, n_vocab_with_unk,
                  n_encoder_layers, n_encoder_units, n_encoder_dropout,
                  n_decoder_units, n_attention_units,
                  n_maxout_units, n_maxout_pools=2, lamb=1.0):
         super(Seq2seq, self).__init__()
         with self.init_scope():
+            self.embed_xy = L.EmbedID(n_vocab, n_encoder_units, ignore_label=PAD)
             self.encoder = Encoder(
-                n_source_vocab,
+                n_vocab,
                 n_encoder_layers,
                 n_encoder_units,
-                n_encoder_dropout
+                n_encoder_dropout,
+                self.embed_xy
             )
             self.decoder = Decoder(
-                n_target_vocab,
-                n_target_vocab_with_unk,
+                n_vocab,
+                n_vocab_with_unk,
                 n_decoder_units,
                 n_attention_units,
                 n_encoder_units * 2,  # because of bi-directional lstm
                 n_maxout_units,
-                n_maxout_pools
+                n_maxout_pools,
+                self.embed_xy
             )
         self.lamb = lamb
 
@@ -102,14 +105,10 @@ class Seq2seq(chainer.Chain):
 
 class Encoder(chainer.Chain):
 
-    def __init__(self, n_vocab, n_layers, n_units, dropout):
+    def __init__(self, n_vocab, n_layers, n_units, dropout, embed_xy):
         super(Encoder, self).__init__()
         with self.init_scope():
-            self.embed_x = L.EmbedID(
-                n_vocab,
-                n_units,
-                ignore_label=PAD
-            )
+            self.embed_x = embed_xy
             self.bilstm = L.NStepBiLSTM(
                 n_layers,
                 n_units,
@@ -145,14 +144,10 @@ class Encoder(chainer.Chain):
 class Decoder(chainer.Chain):
 
     def __init__(self, n_vocab, n_vocab_with_unk, n_units, n_attention_units,
-                 n_encoder_output_units, n_maxout_units, n_maxout_pools):
+                 n_encoder_output_units, n_maxout_units, n_maxout_pools, embed_xy):
         super(Decoder, self).__init__()
         with self.init_scope():
-            self.embed_y = L.EmbedID(
-                n_vocab,
-                n_units,
-                ignore_label=-1
-            )
+            self.embed_y = embed_xy
             self.lstm = L.StatelessLSTM(
                 n_units + n_encoder_output_units,
                 n_units
@@ -349,6 +344,7 @@ class AttentionModule(chainer.Chain):
                 y.copy().astype('f')[:, None],
                 (batch_size, max_length)
             )
+            mask_for_cut.flags.writeable = True
             mask_for_cut[mask_for_cut != PAD] = 1
             mask_for_cut[mask_for_cut == PAD] = 0
 
