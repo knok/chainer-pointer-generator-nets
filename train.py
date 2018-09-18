@@ -87,7 +87,7 @@ def main():
     vocab_words = {i: w for w, i in vocab_ids.items()}
 
     model = Seq2seq(
-        len(vocab_ids), len(vocab_ids_with_unks),
+        len(vocab_ids),
         args.encoder_layer, args.encoder_unit,
         args.encoder_dropout, args.decoder_unit,
         args.attention_unit, args.maxout_unit
@@ -118,21 +118,22 @@ def main():
     )
 
     if args.validation_source and args.validation_target:
-        test_source = load_data(vocab_ids, args.validation_source)
-        test_target = load_data(vocab_ids, args.validation_target)
-        test_source_t = load_data(vocab_ids_with_unks, args.validation_source)
+        test_source, test_target, test_target_s, test_oovs \
+            = utils.load_source_target(args.validation_source,
+                                       args.validation_target,
+                                       vocab_ids)
         assert len(test_source) == len(test_target)
         test_data = list(
-            six.moves.zip(test_source, test_source_t, test_target)
+            six.moves.zip(test_source, test_target, test_target_s, test_oovs)
         )
-        test_data = [(s, st, t) for s, st, t in test_data
+        test_data = [(s, t, ts, v) for s, t, ts, v in test_data
                      if 0 < len(s) and 0 < len(t)]
         test_source_unk = calculate_unknown_ratio(
-            [s for s, _, _ in test_data],
+            [s for s, _, _, _ in test_data],
             len(vocab_ids)
         )
         test_target_unk = calculate_unknown_ratio(
-            [t for _, _, t in test_data],
+            [t for _, _, t, _ in test_data],
             len(vocab_ids)
         )
 
@@ -142,7 +143,7 @@ def main():
 
         @chainer.training.make_extension()
         def translate(_):
-            source, source_t, target = seq2seq_pad_concat_convert(
+            source, target, target_s, oovs = seq2seq_pad_concat_convert(
                 [test_data[numpy.random.choice(len(test_data))]],
                 args.gpu
             )
