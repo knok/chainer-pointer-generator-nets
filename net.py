@@ -402,16 +402,16 @@ class PointerModule(chainer.Chain):
             )
         self.n_vocab = n_vocab
 
-    def __call__(self, context, state, embedding, txs, attention, o):
+    def __call__(self, context, state, embedding, txs, attention, o, oovs):
         """Returns a function that calculates context given decoder's state.
 
         Args:
-            txs: Source sequences' word ids represented by target-side
-                vocabulary ids.
+            context: context vector by attention module
+            state: hidden vector output from lstm decoder
+            embedding: embedding vector
+            txs: Source sequences' word ids
             attention: The attention for source sequences.
             os: Decoder's output.
-            pgen: Weight to balance the probability of generating words from
-                the vocabulary, versus copying words from the source text.
 
         Returns:
             A probability of output words.
@@ -419,16 +419,22 @@ class PointerModule(chainer.Chain):
         """
         batch_size, max_length = txs.shape
 
+        # extended vocab size
+        max_art_oovs = 0
+        for v in oovs:
+            max_art_oovs = len(v) if max_art_oovs < len(v) else max_art_oovs
+        extended_vsize = self.n_vocab + max_art_oovs
+
         pgen = F.broadcast_to(
             F.sigmoid(
                 self.c(context) + self.h(state) + self.w(embedding) +
                 F.broadcast_to(self.b, (batch_size, 1))
             ),
-            (batch_size, self.n_vocab)
+            (batch_size, extended_vsize)
         )
 
         reshaped_txs = self.xp.zeros(
-            (batch_size, max_length, self.n_vocab), 'f'
+            (batch_size, max_length, extended_vsize), 'f'
         )
         for i, tx in enumerate(self.xp.split(txs, batch_size)):
             masked_tx = tx[tx != PAD]
@@ -437,11 +443,11 @@ class PointerModule(chainer.Chain):
         pointer = F.sum(
             reshaped_txs * F.broadcast_to(
                 attention[:, :, None],
-                (batch_size, max_length, self.n_vocab)
+                (batch_size, max_length, extended_vsize)
             ),
             axis=1
         )
 
-        generator = F.pad_sequence(F.softmax(o), length=self.n_vocab)
+        generator = F.pad_sequence(F.softmax(o), length=extended_vsize)
 
         return (1.0 - pgen) * pointer + pgen * generator
