@@ -55,21 +55,21 @@ class Seq2seq(chainer.Chain):
             )
         self.lamb = lamb
 
-    def __call__(self, xs, txs, ys):
+    def __call__(self, xs, ys, yst, oovs):
         """Calculate loss between outputs and ys.
 
         Args:
             xs: Source sentences' word ids.
-            txs: Source sequences' word ids represented by target-side
-                vocabulary ids.
-            ys: Target sentences' word ids.
+            ys: Target sentences' word ids with OOVs
+            yst: Target sentences' word ids with UNK
+            oovs: Out of Vocabulary list of strings
 
         Returns:
             loss: Cross-entoropy loss between outputs and ys.
 
         """
         hxs = self.encoder(xs)
-        os = self.decoder(ys, txs, hxs)
+        os = self.decoder(xs, ys, hxs)
 
         concatenated_os = F.concat(os, axis=0)
         concatenated_ys = F.flatten(ys.T)
