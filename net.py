@@ -84,13 +84,12 @@ class Seq2seq(chainer.Chain):
         chainer.report({'loss': loss.data}, self)
         return loss
 
-    def translate(self, xs, txs, max_length=100):
+    def translate(self, xs, oovs, max_length=100):
         """Generate sentences based on xs.
 
         Args:
             xs: Source sentences' word ids.
-            txs: Source sequences' word ids represented by target-side
-                vocabulary ids.
+            oovs: Out of Vocabulary list of strings
 
         Returns:
             ys: Generated target sentences' word ids.
@@ -98,7 +97,7 @@ class Seq2seq(chainer.Chain):
         """
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             hxs = self.encoder(xs)
-            ys = self.decoder.translate(txs, hxs, max_length)
+            ys = self.decoder.translate(xs, hxs, max_length)
         return ys
 
 
