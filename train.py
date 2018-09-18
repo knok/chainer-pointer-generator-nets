@@ -151,9 +151,23 @@ def main():
 
             source, target, result = source[0], target[0], result[0]
 
-            source_sentence = ' '.join([vocab_words[int(x)] for x in source])
-            target_sentence = ' '.join([vocab_words[int(y)] for y in target])
-            result_sentence = ' '.join([vocab_words[int(y)] for y in result])
+            max_art_oovs = 0
+            for v in oovs:
+                max_art_oovs = len(v) if len(v) > max_art_oovs else max_art_oovs
+            def id2word_oov(i, oov):
+                if i >= len(vocab_words):
+                    oi = i - len(vocab_words)
+                    if oi < len(oov):
+                        w = oov[oi]
+                    else:
+                        w = '<UNK>'
+                    return w
+                else:
+                    return vocab_words[i]
+
+            source_sentence = ' '.join([id2word_oov(int(x), oovs[0]) for x in source])
+            target_sentence = ' '.join([id2word_oov(int(y), oovs[0]) for y in target])
+            result_sentence = ' '.join([id2word_oov(int(y), oovs[0]) for y in result])
             print('# source : ' + source_sentence)
             print('# result : ' + result_sentence)
             print('# expect : ' + target_sentence)
