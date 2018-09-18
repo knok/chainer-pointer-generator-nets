@@ -105,3 +105,39 @@ def calculate_unknown_ratio(data, unk_threshold):
     unknown = sum((s >= unk_threshold).sum() for s in data)
     total = sum(s.size for s in data)
     return unknown / total
+
+def load_source_target(src_path, tgt_path, vocab):
+    """make dataset from source/target files and shared vocab
+
+    Args:
+        src_path: filename of source sequences
+        tgt_path: filename of target sequences
+        vocab: shared vocabulary
+
+    Returns:
+        src_data: BoW representation of source with extended vocab
+        tgt_data_t: BoW representation of target with extended vocab by source
+        tgt_data: BoW representation of traget with unknown
+        oov_data: array of Out of Vocab words
+    """
+    with open(src_path, 'r') as sf, open(tgt_path, 'r') as tf:
+        src_data = []
+        tgt_data = []
+        tgt_data_t = []
+        oov_data = []
+        for src, tgt in zip(sf, tf):
+            # source
+            words = src.strip().split()
+            art_words, oov = article2ids(words, vocab)
+            array = numpy.array(art_words)
+            src_data.append(array)
+            # target
+            words = tgt.strip().split()
+            abs_words = abstract2ids(words, vocab, oov)
+            array = numpy.array(abs_words)
+            tgt_data.append(array)
+            new_array = copy.deepcopy(array)
+            new_array[new_array > len(vocab)] = UNK
+            tgt_data_t.append(new_array)
+            oov_data.append(oov)
+        return src_data, tgt_data_t, tgt_data, oov_data
