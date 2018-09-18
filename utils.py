@@ -120,7 +120,7 @@ def article2ids(words, vocab):
             ids.append(i)
     return ids, oovs
 
-def abstract2ids(words, vocab, articel_oovs):
+def abstract2ids(words, vocab, article_oovs):
     ids = []
     for w in words:
         i = vocab.get(w, UNK)
