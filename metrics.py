@@ -26,7 +26,7 @@ class CalculateBleu(chainer.training.Extension):
             references = []
             hypotheses = []
             for i in range(0, len(self.test_data), self.batch_size):
-                sources, sources_t, targets = seq2seq_pad_concat_convert(
+                sources, targets, targets_s, oovs = seq2seq_pad_concat_convert(
                     self.test_data[i:i + self.batch_size],
                     self.device
                 )
@@ -34,7 +34,7 @@ class CalculateBleu(chainer.training.Extension):
                     [[get_subsequence_before_eos(t).tolist()] for t in targets]
                 )
                 ys = [y.tolist() for y in self.model.translate(
-                      sources, sources_t, self.max_length)]
+                      sources, oovs, self.max_length)]
                 hypotheses.extend(ys)
 
         bleu = bleu_score.corpus_bleu(
