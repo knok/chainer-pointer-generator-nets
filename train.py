@@ -159,7 +159,7 @@ def main():
 
             source, target, result = source[0], target[0], result[0]
 
-            source_sentence = ' '.join([vocab_words[int(x)] for x in source])
+            source_sentence = ' '.join([vocab_words[int(x)] for x in source_t])
             target_sentence = ' '.join([vocab_words[int(y)] for y in target])
             result_sentence = ' '.join([vocab_words[int(y)] for y in result])
             print('# source : ' + source_sentence)
