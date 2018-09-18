@@ -89,24 +89,16 @@ def load_data(vocabulary, path):
     return data
 
 
-def make_vocabulary_with_source_side_unks(source_paths, source_vocabulary,
-                                          target_vocabulary):
-    source_ids_with_unks = copy.deepcopy(source_vocabulary)
-    target_ids_with_unks = copy.deepcopy(target_vocabulary)
-    source_ids_to_target_ids = {}
+def make_vocabulary_with_source_side_unks(source_paths, vocabulary):
+    vocab_ids_with_unks = copy.deepcopy(vocabulary)
 
     sources = read_data(source_paths)
 
     for word in sources:
-        if word not in source_ids_with_unks:
-            source_ids_with_unks[word] = len(source_ids_with_unks)
-    for word in source_ids_with_unks.keys():
-        if word not in target_ids_with_unks:
-            target_ids_with_unks[word] = len(target_ids_with_unks)
-    for k, v in source_ids_with_unks.items():
-        source_ids_to_target_ids[v] = target_ids_with_unks[k]
+        if word not in vocab_ids_with_unks:
+            vocab_ids_with_unks[word] = len(vocab_ids_with_unks)
 
-    return source_ids_with_unks, target_ids_with_unks, source_ids_to_target_ids
+    return vocab_ids_with_unks
 
 
 def calculate_unknown_ratio(data, unk_threshold):
