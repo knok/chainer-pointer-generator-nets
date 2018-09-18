@@ -29,11 +29,11 @@ def seq2seq_pad_concat_convert(xy_batch, device):
         Tuple of Converted array.
 
     """
-    x_seqs, tx_seqs, y_seqs = zip(*xy_batch)
+    x_seqs, y_seqs, ys_seqs, oovs = zip(*xy_batch)
 
-    x_block = convert.concat_examples(x_seqs, device, padding=-1)
-    tx_block = convert.concat_examples(tx_seqs, device, padding=-1)
-    y_block = convert.concat_examples(y_seqs, device, padding=-1)
+    x_block = convert.concat_examples(x_seqs, device, padding=PAD)
+    y_block = convert.concat_examples(y_seqs, device, padding=PAD)
+    ys_block = convert.concat_examples(ys_seqs, device, padding=PAD)
     xp = cuda.get_array_module(x_block)
 
     x_block = xp.pad(x_block, ((0, 0), (0, 1)),
@@ -41,17 +41,18 @@ def seq2seq_pad_concat_convert(xy_batch, device):
     for i_batch, seq in enumerate(x_seqs):
         x_block[i_batch, len(seq)] = EOS
 
-    tx_block = xp.pad(tx_block, ((0, 0), (0, 1)),
+    y_block = xp.pad(y_block, ((0, 0), (0, 1)),
                       'constant', constant_values=PAD)
-    for i_batch, seq in enumerate(tx_seqs):
-        tx_block[i_batch, len(seq)] = EOS
-
-    y_out_block = xp.pad(y_block, ((0, 0), (0, 1)),
-                         'constant', constant_values=PAD)
     for i_batch, seq in enumerate(y_seqs):
+        y_block[i_batch, len(seq)] = EOS
+
+    y_out_block = xp.pad(ys_block, ((0, 0), (0, 1)),
+                         'constant', constant_values=PAD)
+    for i_batch, seq in enumerate(ys_seqs):
         y_out_block[i_batch, len(seq)] = EOS
 
-    return (x_block, tx_block, y_out_block)
+    # just return oovs as-is
+    return (x_block, y_block, y_out_block, oovs)
 
 
 def count_lines(path):
