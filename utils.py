@@ -106,6 +106,34 @@ def calculate_unknown_ratio(data, unk_threshold):
     total = sum(s.size for s in data)
     return unknown / total
 
+def article2ids(words, vocab):
+    ids = []
+    oovs = []
+    for w in words:
+        i = vocab.get(w, UNK)
+        if i == UNK:
+            if w not in oovs:
+                oovs.append(w)
+            oov_num = oovs.index(w)
+            ids.append(len(vocab) + oov_num)
+        else:
+            ids.append(i)
+    return ids, oovs
+
+def abstract2ids(words, vocab, articel_oovs):
+    ids = []
+    for w in words:
+        i = vocab.get(w, UNK)
+        if i == UNK:
+            if w in article_oovs:
+                vocab_idx = len(vocab) + article_oovs.index(w)
+                ids.append(vocab_idx)
+            else:
+                ids.append(UNK)
+        else:
+            ids.append(i)
+    return ids
+
 def load_source_target(src_path, tgt_path, vocab):
     """make dataset from source/target files and shared vocab
 
