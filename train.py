@@ -147,9 +147,9 @@ def main():
                 [test_data[numpy.random.choice(len(test_data))]],
                 args.gpu
             )
-            result = model.translate(source, source_t)[0].reshape(1, -1)
+            result = model.translate(source, oovs)[0].reshape(1, -1)
 
-            source, target, result = source_t[0], target[0], result[0]
+            source, target, result = source[0], target[0], result[0]
 
             source_sentence = ' '.join([vocab_words[int(x)] for x in source])
             target_sentence = ' '.join([vocab_words[int(y)] for y in target])
