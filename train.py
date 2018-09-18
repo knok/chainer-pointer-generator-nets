@@ -15,7 +15,7 @@ from utils import load_vocabulary
 from utils import load_data
 from utils import make_vocabulary_with_source_side_unks
 from utils import calculate_unknown_ratio
-
+import utils
 
 def main():
     parser = argparse.ArgumentParser(description='Attention-based NMT')
@@ -61,30 +61,21 @@ def main():
 
     vocab_ids = load_vocabulary(args.VOCAB)
 
-    vocab_ids_with_unks = \
-        make_vocabulary_with_source_side_unks(
-            [args.SOURCE, args.validation_source],
-            vocab_ids
-        )
+    train_source, train_target, train_target_s, target_oovs \
+        = utils.load_source_target(args.SOURCE, args.TARGET, vocab_ids)
 
-    train_source = load_data(vocab_ids_with_unks, args.SOURCE)
-    train_target = load_data(vocab_ids_with_unks, args.TARGET)
-    # train source represented by target-side dictionary indices
-    train_source_t = load_data(vocab_ids_with_unks, args.SOURCE)
     assert len(train_source) == len(train_target)
-    train_data = [(s, st, t)
-                  for s, st, t
-                  in six.moves.zip(train_source, train_source_t, train_target)
-                  if args.min_source_sentence <= len(s)
-                  <= args.max_source_sentence and
-                  args.min_source_sentence <= len(t)
-                  <= args.max_source_sentence]
+    train_data = [(s, t, ts, v) for s, t, ts, v in six.moves.zip(
+        train_source, train_target, train_target_s, target_oovs)
+                  if args.min_source_sentence <= len(s) <= args.max_source_sentence and
+                  args.min_source_sentence <= len(t) <= args.max_source_sentence]
+
     train_source_unk = calculate_unknown_ratio(
-        [s for s, _, _ in train_data],
+        [s for s, _, _, _ in train_data],
         len(vocab_ids)
     )
     train_target_unk = calculate_unknown_ratio(
-        [t for _, _, t in train_data],
+        [t for _, _, t, _ in train_data],
         len(vocab_ids)
     )
 
@@ -93,7 +84,7 @@ def main():
     print('Train source unknown: {0:.2f}'.format(train_source_unk))
     print('Train target unknown: {0:.2f}'.format(train_target_unk))
 
-    vocab_words = {i: w for w, i in vocab_ids_with_unks.items()}
+    vocab_words = {i: w for w, i in vocab_ids.items()}
 
     model = Seq2seq(
         len(vocab_ids), len(vocab_ids_with_unks),
