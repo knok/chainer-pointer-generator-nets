@@ -69,7 +69,7 @@ class Seq2seq(chainer.Chain):
 
         """
         hxs = self.encoder(xs)
-        os = self.decoder(xs, ys, hxs)
+        os = self.decoder(ys, xs, hxs, oovs)
 
         concatenated_os = F.concat(os, axis=0)
         concatenated_ys = F.flatten(ys.T)
@@ -176,12 +176,12 @@ class Decoder(chainer.Chain):
         self.n_vocab = n_vocab
         self.n_units = n_units
 
-    def __call__(self, xs, ys, hxs, oovs):
+    def __call__(self, ys, txs, hxs, oovs):
         """Calculate cross-entoropy loss between predictions and ys.
 
         Args:
-            xs: Source sequences' words ids with OOVs
             ys: Target sequences' word ids with OOVs
+            txs: Source sequences' words ids with OOVs
             hxs: Hidden states for source sequences.
             oovs: Out of Vocabulary list of words
 
@@ -191,7 +191,7 @@ class Decoder(chainer.Chain):
         """
         batch_size, max_length, encoder_output_size = hxs.shape
 
-        compute_context = self.attention(hxs, xs)
+        compute_context = self.attention(hxs, txs)
         # initial cell state
         c = Variable(self.xp.zeros((batch_size, self.n_units), 'f'))
         # initial hidden state
@@ -213,7 +213,7 @@ class Decoder(chainer.Chain):
             o = self.w(self.maxout(concatenated))
 
             pointed_o = self.pointer(
-                context, h, previous_embedding, ys, attention, o, oovs
+                context, h, previous_embedding, txs, attention, o, oovs
             )
 
             os.append(pointed_o)
