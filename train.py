@@ -171,17 +171,17 @@ def main():
                     if oi < len(oov):
                         w = oov[oi]
                     else:
-                        w = '<UNK>'
+                        w = '<UNK:%d,%d>' % (oi, i)
                     return w
                 else:
                     return vocab_words[i]
 
-            source_sentence = ' '.join([id2words_with_oov(
-                int(x), vocab_words, oovs[0]) for x in source])
-            target_sentence = ' '.join([id2words_with_oov(
-                int(y), vocab_words, oovs[0]) for y in target])
-            result_sentence = ' '.join([id2words_with_oov(
-                int(y), vocab_words, oovs[0]) for y in result])
+            source_sentence = ' '.join([id2word_oov(
+                int(x), oovs[0]) for x in source])
+            target_sentence = ' '.join([id2word_oov(
+                int(y), oovs[0]) for y in target])
+            result_sentence = ' '.join([id2word_oov(
+                int(y), oovs[0]) for y in result])
             print('# source : ' + source_sentence)
             print('# result : ' + result_sentence)
             print('# expect : ' + target_sentence)
