@@ -160,7 +160,7 @@ def main():
             )
             result = model.translate(source, oovs)[0].reshape(1, -1)
 
-            source, target, result = source[0], target[0], result[0]
+            source, target, result = source[0], target_s[0], result[0]
 
             max_art_oovs = 0
             for v in oovs:
