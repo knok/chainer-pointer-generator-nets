@@ -20,5 +20,5 @@ This repository is partly derived from [this repository](https://github.com/kiyo
 # How to Run
 
 ```
-$ python train.py <path/to/training-source> <path/to/training-target> <path/to/source-vocabulary> <path/to/target-vocabulary> --validation-source <path/to/validation-source> --validation-target <path/to/validation-target> -g <gpu-id>
+$ python train.py <path/to/training-source> <path/to/training-target> <path/to/shared-vocabulary> --validation-source <path/to/validation-source> --validation-target <path/to/validation-target> -g <gpu-id>
 ```
