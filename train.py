@@ -17,17 +17,6 @@ from utils import make_vocabulary_with_source_side_unks
 from utils import calculate_unknown_ratio
 import utils
 
-def id2words_with_oov(i, vocab, oov):
-    if i >= len(vocab):
-        oi = i - len(vocab)
-        if oi < len(oov):
-            w = oov[oi]
-        else:
-            w = '<UNK:%d>' % oi
-            return w
-    else:
-        return vocab[i]
-
 def main():
     parser = argparse.ArgumentParser(description='Attention-based NMT')
     parser.add_argument('SOURCE', help='source sentence list')
