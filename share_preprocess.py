@@ -17,11 +17,12 @@ split_pattern = re.compile(r'([.,!?"\':;)(])')
 digit_pattern = re.compile(r'\d')
 
 
-def split_sentence(s, use_lower):
+def split_sentence(s, use_lower, ignore_number):
     if use_lower:
         s = s.lower()
     s = s.replace('\u2019', "'")
-    s = digit_pattern.sub('0', s)
+    if not ignore_number:
+        s = digit_pattern.sub('0', s)
     words = []
     for word in s.strip().split():
         words.extend(split_pattern.split(word))
@@ -29,12 +30,12 @@ def split_sentence(s, use_lower):
     return words
 
 
-def read_file(path, use_lower):
+def read_file(path, use_lower, ignore_number):
     n_lines = count_lines(path)
     bar = progressbar.ProgressBar()
     with io.open(path, encoding='utf-8', errors='ignore') as f:
         for line in bar(f, max_value=n_lines):
-            words = split_sentence(line, use_lower)
+            words = split_sentence(line, use_lower, ignore_number)
             yield words
 
 
@@ -44,7 +45,7 @@ def preprocess_dataset(src_path, tgt_path, src_outpath, tgt_outpath, vocab_path=
     counts = collections.Counter()
     for path, outpath in [(src_path, src_outpath), (tgt_path, tgt_outpath)]:
         with io.open(outpath, 'w', encoding='utf-8') as f:
-            for words in read_file(path, use_lower):
+            for words in read_file(path, use_lower, ignore_number):
                 line = ' '.join(words)
                 f.write(line)
                 f.write('\n')
