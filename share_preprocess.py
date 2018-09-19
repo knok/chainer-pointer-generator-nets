@@ -15,7 +15,7 @@ import smart_open
 
 split_pattern = re.compile(r'([.,!?"\':;)(])')
 digit_pattern = re.compile(r'\d')
-
+numeric_pattern = re.compile(r'\d+')
 
 def split_sentence(s, use_lower, ignore_number):
     if use_lower:
@@ -51,7 +51,7 @@ def preprocess_dataset(src_path, tgt_path, src_outpath, tgt_outpath, vocab_path=
                 f.write('\n')
                 if vocab_path is not None:
                     for word in words:
-                        if ignore_number and word.isnumeric(): continue
+                        if ignore_number and numeric_pattern.fullmatch(word): continue
                         counts[word] += 1
                         token_count += len(words)
     print('number of tokens: %d' % token_count)
