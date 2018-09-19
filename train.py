@@ -26,7 +26,7 @@ def id2words_with_oov(i, vocab, oov):
             w = '<UNK:%d>' % oi
             return w
     else:
-        return vocab[w]
+        return vocab[i]
 
 def main():
     parser = argparse.ArgumentParser(description='Attention-based NMT')
