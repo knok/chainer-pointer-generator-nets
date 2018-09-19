@@ -86,7 +86,7 @@ def main():
         len(vocab_ids)
     )
     train_target_unk = calculate_unknown_ratio(
-        [t for _, t, _, _ in train_data],
+        [t for _, _, t, _ in train_data],
         len(vocab_ids)
     )
 
