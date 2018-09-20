@@ -61,21 +61,21 @@ def main():
 
     vocab_ids = load_vocabulary(args.VOCAB)
 
-    train_source, train_target, train_target_s, target_oovs \
+    train_source, train_target, target_oovs \
         = utils.load_source_target(args.SOURCE, args.TARGET, vocab_ids)
 
     assert len(train_source) == len(train_target)
-    train_data = [(s, t, ts, v) for s, t, ts, v in six.moves.zip(
-        train_source, train_target, train_target_s, target_oovs)
+    train_data = [(s, t, v) for s, t, v in six.moves.zip(
+        train_source, train_target, target_oovs)
                   if args.min_source_sentence <= len(s) <= args.max_source_sentence and
                   args.min_source_sentence <= len(t) <= args.max_source_sentence]
 
     train_source_unk = calculate_unknown_ratio(
-        [s for s, _, _, _ in train_data],
+        [s for s, _, _ in train_data],
         len(vocab_ids)
     )
     train_target_unk = calculate_unknown_ratio(
-        [t for _, _, t, _ in train_data],
+        [t for _, t, _ in train_data],
         len(vocab_ids)
     )
 
@@ -118,15 +118,15 @@ def main():
     )
 
     if args.validation_source and args.validation_target:
-        test_source, test_target, test_target_s, test_oovs \
+        test_source, test_target, test_oovs \
             = utils.load_source_target(args.validation_source,
                                        args.validation_target,
                                        vocab_ids)
         assert len(test_source) == len(test_target)
         test_data = list(
-            six.moves.zip(test_source, test_target, test_target_s, test_oovs)
+            six.moves.zip(test_source, test_target, test_oovs)
         )
-        test_data = [(s, t, ts, v) for s, t, ts, v in test_data
+        test_data = [(s, t, v) for s, t, v in test_data
                      if 0 < len(s) and 0 < len(t)]
         test_source_unk = calculate_unknown_ratio(
             [s for s, _, _, _ in test_data],
@@ -143,13 +143,13 @@ def main():
 
         @chainer.training.make_extension()
         def translate(_):
-            source, target, target_s, oovs = seq2seq_pad_concat_convert(
+            source, target, oovs = seq2seq_pad_concat_convert(
                 [test_data[numpy.random.choice(len(test_data))]],
                 args.gpu
             )
             result = model.translate(source, oovs)[0].reshape(1, -1)
 
-            source, target, result = source[0], target_s[0], result[0]
+            source, target, result = source[0], target[0], result[0]
 
             max_art_oovs = 0
             for v in oovs:
