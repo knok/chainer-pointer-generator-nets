@@ -129,11 +129,11 @@ def main():
         test_data = [(s, t, v) for s, t, v in test_data
                      if 0 < len(s) and 0 < len(t)]
         test_source_unk = calculate_unknown_ratio(
-            [s for s, _, _, _ in test_data],
+            [s for s, _, _ in test_data],
             len(vocab_ids)
         )
         test_target_unk = calculate_unknown_ratio(
-            [t for _, _, t, _ in test_data],
+            [t for _, t, _ in test_data],
             len(vocab_ids)
         )
 
