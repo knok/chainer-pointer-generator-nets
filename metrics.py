@@ -26,7 +26,7 @@ class CalculateBleu(chainer.training.Extension):
             references = []
             hypotheses = []
             for i in range(0, len(self.test_data), self.batch_size):
-                sources, targets, targets_s, oovs = seq2seq_pad_concat_convert(
+                sources, targets, oovs = seq2seq_pad_concat_convert(
                     self.test_data[i:i + self.batch_size],
                     self.device
                 )
