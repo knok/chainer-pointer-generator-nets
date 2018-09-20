@@ -55,13 +55,12 @@ class Seq2seq(chainer.Chain):
             )
         self.lamb = lamb
 
-    def __call__(self, xs, ys, yst, oovs):
+    def __call__(self, xs, ys, oovs):
         """Calculate loss between outputs and ys.
 
         Args:
             xs: Source sentences' word ids.
             ys: Target sentences' word ids with OOVs
-            yst: Target sentences' word ids with UNK
             oovs: Out of Vocabulary list of strings
 
         Returns:
@@ -72,7 +71,7 @@ class Seq2seq(chainer.Chain):
         os = self.decoder(ys, xs, hxs, oovs)
 
         concatenated_os = F.concat(os, axis=0)
-        concatenated_ys = F.flatten(yst.T)
+        concatenated_ys = F.flatten(ys.T)
         n_words = len(self.xp.where(concatenated_ys.data != PAD)[0])
 
         loss = F.sum(
