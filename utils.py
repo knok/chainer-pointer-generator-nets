@@ -29,11 +29,10 @@ def seq2seq_pad_concat_convert(xy_batch, device):
         Tuple of Converted array.
 
     """
-    x_seqs, y_seqs, ys_seqs, oovs = zip(*xy_batch)
+    x_seqs, y_seqs, oovs = zip(*xy_batch)
 
     x_block = convert.concat_examples(x_seqs, device, padding=PAD)
     y_block = convert.concat_examples(y_seqs, device, padding=PAD)
-    ys_block = convert.concat_examples(ys_seqs, device, padding=PAD)
     xp = cuda.get_array_module(x_block)
 
     x_block = xp.pad(x_block, ((0, 0), (0, 1)),
@@ -46,13 +45,9 @@ def seq2seq_pad_concat_convert(xy_batch, device):
     for i_batch, seq in enumerate(y_seqs):
         y_block[i_batch, len(seq)] = EOS
 
-    y_out_block = xp.pad(ys_block, ((0, 0), (0, 1)),
-                         'constant', constant_values=PAD)
-    for i_batch, seq in enumerate(ys_seqs):
-        y_out_block[i_batch, len(seq)] = EOS
 
     # just return oovs as-is
-    return (x_block, y_block, y_out_block, oovs)
+    return (x_block, y_block, oovs)
 
 
 def count_lines(path):
@@ -152,7 +147,6 @@ def load_source_target(src_path, tgt_path, vocab):
     with open(src_path, 'r') as sf, open(tgt_path, 'r') as tf:
         src_data = []
         tgt_data = []
-        tgt_data_t = []
         oov_data = []
         for src, tgt in zip(sf, tf):
             # source
@@ -165,8 +159,5 @@ def load_source_target(src_path, tgt_path, vocab):
             abs_words = abstract2ids(words, vocab, oov)
             array = numpy.array(abs_words)
             tgt_data.append(array)
-            new_array = copy.deepcopy(array)
-            new_array[new_array > len(vocab)] = UNK
-            tgt_data_t.append(new_array)
             oov_data.append(oov)
-        return src_data, tgt_data_t, tgt_data, oov_data
+        return src_data, tgt_data, oov_data
