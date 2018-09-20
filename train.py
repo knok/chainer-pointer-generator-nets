@@ -127,7 +127,8 @@ def main():
             six.moves.zip(test_source, test_target, test_oovs)
         )
         test_data = [(s, t, v) for s, t, v in test_data
-                     if 0 < len(s) and 0 < len(t)]
+                     if args.min_source_sentence <= len(s) <= args.max_source_sentence and
+                     args.min_source_sentence <= len(t) <= args.max_source_sentence]
         test_source_unk = calculate_unknown_ratio(
             [s for s, _, _ in test_data],
             len(vocab_ids)
