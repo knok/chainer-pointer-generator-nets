@@ -36,7 +36,7 @@ def main():
                         help='resume the training from snapshot')
     parser.add_argument('--encoder-unit', type=int, default=128,
                         help='number of units')
-    parser.add_argument('--encoder-layer', type=int, default=3,
+    parser.add_argument('--encoder-layer', type=int, default=1,
                         help='number of layers')
     parser.add_argument('--encoder-dropout', type=int, default=0.1,
                         help='number of layers')
