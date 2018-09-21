@@ -55,8 +55,12 @@ def main():
     parser.add_argument('--validation-interval', type=int, default=4000,
                         help='number of iteration to evlauate the model '
                         'with validation dataset')
+    parser.add_argument('--snapshot-interval', type=int, default=2000,
+                        help='number of iteration to take snapshots')
     parser.add_argument('--out', '-o', default='result',
                         help='directory to output the result')
+    parser.add_argument('--model-fname', default='model.npz',
+                        help='final output model filename')
     args = parser.parse_args()
 
     vocab_ids = load_vocabulary(args.VOCAB)
@@ -116,6 +120,13 @@ def main():
         ),
         trigger=(args.log_interval, 'iteration')
     )
+    trainer.extend(
+        extensions.snapshot(filename='snapshot_iter_{.updater.iteration}.npz'),
+        trigger=(args.snapshot_interval, 'iteration'))
+    trainer.extend(
+        extensions.snapshot_object(model, filename='model_interval.npz'),
+        trigger=(args.snapshot_interval, 'iteration'))
+
 
     if args.validation_source and args.validation_target:
         test_source, test_target, test_oovs \
@@ -191,7 +202,7 @@ def main():
 
     print('start training')
     trainer.run()
-
+    chainer.serializers.save_npz('%s/%s' % (args.out, args.model_fname), model)
 
 if __name__ == '__main__':
     main()
