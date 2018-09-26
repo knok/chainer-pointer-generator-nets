@@ -108,7 +108,7 @@ def main():
         train_iter, optimizer, converter=seq2seq_pad_concat_convert,
         device=args.gpu
     )
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'))
+    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
     trainer.extend(
         extensions.LogReport(trigger=(args.log_interval, 'iteration'))
     )
